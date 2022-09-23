@@ -16,8 +16,6 @@
 
   class BooksList {
     constructor() {
-      this.favoriteBooks = [];
-      this.filters = [];
       this.initData();
       this.renderBooks();
       this.initActions();
