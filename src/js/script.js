@@ -1,6 +1,4 @@
 {
-  'use strict';
-
   const select = {
     templateOf: {
       templateBook: '#template-book',
@@ -9,22 +7,28 @@
       booksList: '.books-list',
       bookImg: '.book__image',
       filters: '.filters'
-    }
+    },
+    all: {
+      filterForm: '.filters',
+      filtersInputs: '.filters input',
+    },
   };
 
   class BooksList {
     constructor() {
+      this.favoriteBooks = [];
+      this.filters = [];
       this.initData();
-      this.render();
+      this.renderBooks();
       this.initActions();
-      this.hideBooks();
+      this.filterBooks();
     }
 
     initData() {
       this.data = dataSource.books;
     }
 
-    render() {
+    renderBooks() {
 
       for (let book in this.data) {
 
@@ -35,7 +39,7 @@
           image: this.data[book].image,
           id: this.data[book].id,
           ratingWidth: this.data[book].rating * 10,
-          ratingBgc: this.setBarColor(this.data[book].rating)
+          ratingBgc: this.determineRatingBgc(this.data[book].rating)
         };
 
         const templates = {
@@ -46,10 +50,15 @@
         book = utils.createDOMFromHTML(generatedHTML);
         const bookContainer = document.querySelector(select.containerOf.booksList);
         bookContainer.appendChild(book);
-
-
-
       }
+    }
+    getElements() {
+      this.dom = {};
+      this.dom.books = document.querySelector(select.containerOf.bookList);
+      this.dom.filterForm = document.querySelector(select.all.filterForm);
+      this.dom.filterInputs = document.querySelectorAll(
+        select.all.filtersInputs
+      );
     }
 
     initActions() {
@@ -82,41 +91,33 @@
             this.filters.splice(index, 1);
           }
         }
-        this.hideBooks();
+        this.filterBooks();
       });
 
     }
 
-    hideBooks() {
-
-      for (let book of this.data) {
-        if (book.details.adults == true && this.filters.includes('adults')) {
-          if (document.querySelector(select.containerOf.bookImg).getAttribute('data-id') == book.id) {
-            document.querySelector(`[data-id="${book.id}"]`).classList.add('hidden');
+    filterBooks() {
+      for (const book of this.data) {
+        let shouldBeHidden = false;
+        for (const filter of this.filters) {
+          if (!book.details[filter]) {
+            shouldBeHidden = true;
+            break;
           }
-
-        } else if (book.details.adults == true && !this.filters.includes('adults')) {
-          document.querySelector(`[data-id="${book.id}"]`).classList.remove('hidden');
         }
-
-        let arr = [];
-
-        if (book.details.nonFiction == true && this.filters.includes('nonFiction')) {
-          arr.push(book.id);
-
-          for (let one of arr) {
-            document.querySelector(`[data-id="${one}"]`).classList.add('hidden');
-          }
-        } else if (book.details.nonFiction == true && !this.filters.includes('nonFiction')) {
-          arr.push(book.id);
-          for (let one of arr) {
-            document.querySelector(`[data-id="${one}"]`).classList.remove('hidden');
-          }
+        if (shouldBeHidden) {
+          document
+            .querySelector(`[data-id="${book.id}"]`)
+            .classList.add('hidden');
+        } else {
+          document
+            .querySelector(`[data-id="${book.id}"]`)
+            .classList.remove('hidden');
         }
       }
     }
 
-    setBarColor(rating) {
+    determineRatingBgc(rating) {
 
       if (rating < 6) {
         return 'linear-gradient(to bottom,  #fefcea 0%, #f1da36 100%)';
